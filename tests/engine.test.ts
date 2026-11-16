@@ -1,0 +1,7 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { detectAlerts, duration, extractTimes, validateTicket } from '../lib/engine.ts';
+test('manager names do not confuse the conjunction or with manager Or',()=>{assert.equal(detectAlerts('Reboot or replace the router.').manager,false);assert.equal(detectAlerts('OR: Approved the scope').manager,true);assert.equal(detectAlerts('@Or please review').manager,true);assert.equal(detectAlerts('Nadav approved').manager,true);});
+test('extracts multi-day windows and midnight rollover',()=>{assert.deepEqual(extractTimes('2026-11-15\nSE 11:40 PM\nT2 12:20 AM'),{start:'2026-11-15T23:40',end:'2026-11-16T00:20',assumedDate:false});assert.equal(duration('2026-11-15T23:40','2026-11-16T00:20'),'0h 40m');assert.equal(duration('2026-11-16T09:00','2026-11-15T09:00'),'Invalid window');});
+test('time-only input explicitly reports its assumed date',()=>{assert.equal(extractTimes('SE 09:15\nT2 10:30',new Date(2026,10,16))?.assumedDate,true);assert.equal(extractTimes('no time in this thread'),null);assert.equal(extractTimes('SE 28:99'),null);});
+test('backup validation rejects malformed and partial tickets',()=>{assert.equal(validateTicket({id:'one'}),false);assert.equal(validateTicket({id:'one',vessel:'MV Star',se:'',t2:'',overseer:'',start:'',end:'',raw:'',summary:'',type:'Installation',status:'Active',updatedAt:1,reminder:null}),true);});
